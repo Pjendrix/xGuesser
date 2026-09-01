@@ -6,7 +6,7 @@ export async function onRequestGet({ request, env }) {
      ORDER BY deadline ASC LIMIT 1`
   ).first();
 
-  if (!gw) return json({ gameweek: null, teams: [], players: [], picks: {} });
+  if (!gw) return json({ gameweek: null, teams: [], players: [], featured: null, picks: {} });
 
   const teams = (await env.DB.prepare(
     "SELECT id, name, short_name FROM teams ORDER BY name"
@@ -17,6 +17,15 @@ export async function onRequestGet({ request, env }) {
      FROM players p JOIN teams t ON t.id = p.team_id
      ORDER BY t.short_name, p.name`
   ).all()).results;
+
+  let featured = null;
+  if (gw.featured_player_id) {
+    featured = await env.DB.prepare(
+      `SELECT p.id, p.name, p.position, t.short_name AS team, t.name AS team_name
+       FROM players p JOIN teams t ON t.id = p.team_id
+       WHERE p.id = ?1`
+    ).bind(gw.featured_player_id).first();
+  }
 
   const u = await currentUser(request, env);
   const picks = {};
@@ -29,6 +38,6 @@ export async function onRequestGet({ request, env }) {
 
   return json({
     gameweek: { id: gw.id, season: gw.season, deadline: gw.deadline, open: isOpen(gw) },
-    teams, players, picks,
+    teams, players, featured, picks,
   });
 }
