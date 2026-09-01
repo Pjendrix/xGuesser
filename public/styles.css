@@ -133,3 +133,25 @@ footer {
 footer p { color: var(--muted); font-size: .82rem; margin: 1rem 0 0; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* --- vyhledávací pole --- */
+.combo { position: relative; }
+.combo input[type=text] {
+  width: 100%; padding: .6rem .7rem; font: inherit;
+  background: #081525; color: var(--chalk);
+  border: 1px solid var(--line); border-radius: 8px;
+}
+.combo input.is-set { border-color: var(--beam); }
+.options {
+  position: absolute; z-index: 20; left: 0; right: 0; top: 100%;
+  margin: .25rem 0 0; padding: .25rem; list-style: none;
+  background: #0B1A2D; border: 1px solid var(--line);
+  border-radius: 8px; max-height: 15rem; overflow-y: auto;
+  box-shadow: 0 12px 28px rgba(0,0,0,.45);
+}
+.options li {
+  padding: .5rem .6rem; border-radius: 6px; cursor: pointer; font-size: .93rem;
+}
+.options li:hover, .options li.is-active { background: #16375C; }
+.options li.none { color: var(--muted); cursor: default; }
+.options li.none:hover { background: none; }

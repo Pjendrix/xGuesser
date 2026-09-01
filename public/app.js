@@ -1,5 +1,5 @@
 const $ = (s) => document.querySelector(s);
-let state = { user: null, gameweek: null };
+let state = { user: null, gameweek: null, player: [], team: [], chosen: {} };
 
 /* ---------- Google Sign-In ---------- */
 window.onload = () => {
@@ -37,11 +37,76 @@ function renderAccount() {
   box.append(name, out);
 }
 
+/* ---------- Vyhledávací pole ---------- */
+function label(cat, item) {
+  return cat === "player" ? `${item.name} · ${item.team}` : item.name;
+}
+
+function wireCombo(cat) {
+  const input = $(`#${cat}Search`);
+  const list = $(`#${cat}List`);
+  let active = -1;
+
+  const close = () => { list.hidden = true; input.setAttribute("aria-expanded", "false"); active = -1; };
+
+  const choose = (item) => {
+    state.chosen[cat] = item.id;
+    input.value = label(cat, item);
+    input.classList.add("is-set");
+    close();
+  };
+
+  const render = (q) => {
+    const needle = q.trim().toLowerCase();
+    const pool = state[cat].filter((i) =>
+      label(cat, i).toLowerCase().includes(needle)
+    ).slice(0, 8);
+
+    if (!pool.length) {
+      list.innerHTML = '<li class="none">Nic takového tu není.</li>';
+      list.hidden = false;
+      return;
+    }
+    list.innerHTML = pool.map((i, n) =>
+      `<li role="option" data-id="${i.id}" data-n="${n}">${label(cat, i)}</li>`).join("");
+    list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    list.querySelectorAll("li[data-id]").forEach((li) => {
+      li.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        choose(state[cat].find((x) => x.id === Number(li.dataset.id)));
+      });
+    });
+  };
+
+  input.addEventListener("input", () => {
+    state.chosen[cat] = null;
+    input.classList.remove("is-set");
+    render(input.value);
+  });
+  input.addEventListener("focus", () => render(input.value));
+  input.addEventListener("blur", () => setTimeout(close, 120));
+
+  input.addEventListener("keydown", (e) => {
+    const items = [...list.querySelectorAll("li[data-id]")];
+    if (!items.length) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      active = (active + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+      items.forEach((li, n) => li.classList.toggle("is-active", n === active));
+      items[active].scrollIntoView({ block: "nearest" });
+    } else if (e.key === "Enter" && active > -1) {
+      e.preventDefault();
+      choose(state[cat].find((x) => x.id === Number(items[active].dataset.id)));
+    } else if (e.key === "Escape") close();
+  });
+}
+
 /* ---------- xG dials ---------- */
 function wireDial(cat) {
   const range = $(`#${cat}Range`), num = $(`#${cat}Num`), out = $(`#${cat}Out`);
   const show = (v) => {
-    const n = Math.max(0.01, Math.min(10, Number(v) || 0.01));
+    const n = Math.max(0.01, Math.min(10, Number(String(v).replace(",", ".")) || 0.01));
     out.textContent = n.toFixed(2);
     if (document.activeElement !== num) num.value = n.toFixed(2);
     if (n <= Number(range.max)) range.value = n;
@@ -60,6 +125,8 @@ async function load() {
 
   const data = await (await fetch("/api/gameweek")).json();
   state.gameweek = data.gameweek;
+  state.player = data.players || [];
+  state.team = data.teams || [];
 
   const dl = $("#deadline");
   if (!data.gameweek) {
@@ -71,21 +138,18 @@ async function load() {
       : `Kolo ${data.gameweek.id} · tipy jsou uzamčené`;
   }
 
-  const ps = $("#playerSelect"), ts = $("#teamSelect");
-  ps.innerHTML = data.players.map((p) =>
-    `<option value="${p.id}">${p.team} — ${p.name}</option>`).join("");
-  ts.innerHTML = data.teams.map((t) =>
-    `<option value="${t.id}">${t.name}</option>`).join("");
-
-  if (data.picks.player) {
-    ps.value = data.picks.player.subject_id;
-    $("#playerNum").value = data.picks.player.xg;
-    $("#playerNum").dispatchEvent(new Event("input"));
-  }
-  if (data.picks.team) {
-    ts.value = data.picks.team.subject_id;
-    $("#teamNum").value = data.picks.team.xg;
-    $("#teamNum").dispatchEvent(new Event("input"));
+  for (const cat of ["player", "team"]) {
+    const p = data.picks[cat];
+    if (!p) continue;
+    const item = state[cat].find((x) => x.id === p.subject_id);
+    if (item) {
+      state.chosen[cat] = item.id;
+      const inp = $(`#${cat}Search`);
+      inp.value = label(cat, item);
+      inp.classList.add("is-set");
+    }
+    $(`#${cat}Num`).value = p.xg;
+    $(`#${cat}Num`).dispatchEvent(new Event("input"));
   }
 
   const canPlay = state.user && data.gameweek && data.gameweek.open;
@@ -100,9 +164,15 @@ document.querySelectorAll("button.save").forEach((btn) => {
   btn.addEventListener("click", async () => {
     const cat = btn.dataset.category;
     const msg = document.querySelector(`[data-msg="${cat}"]`);
-    const subject_id = Number($(cat === "player" ? "#playerSelect" : "#teamSelect").value);
-    const xg = Number($(`#${cat}Num`).value);
+    const subject_id = state.chosen[cat];
 
+    if (!subject_id) {
+      msg.className = "msg err";
+      msg.textContent = cat === "player" ? "Vyber hráče ze seznamu." : "Vyber tým ze seznamu.";
+      return;
+    }
+
+    const xg = Number($(`#${cat}Num`).value.replace(",", "."));
     btn.disabled = true;
     msg.className = "msg"; msg.textContent = "Ukládám…";
     const r = await fetch("/api/picks", {
@@ -156,6 +226,8 @@ $("#contactForm").addEventListener("submit", async (e) => {
   if (r.ok) form.reset();
 });
 
+wireCombo("player");
+wireCombo("team");
 wireDial("player");
 wireDial("team");
 load();

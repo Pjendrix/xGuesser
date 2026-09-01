@@ -36,10 +36,11 @@
 
     <article class="pick" data-category="player">
       <h2>Tip na hráče</h2>
-      <label class="field">
+      <div class="field combo" data-combo="player">
         <span>Hráč</span>
-        <select id="playerSelect"></select>
-      </label>
+        <input type="text" id="playerSearch" autocomplete="off" placeholder="Začni psát jméno…" role="combobox" aria-expanded="false" aria-controls="playerList">
+        <ul class="options" id="playerList" role="listbox" hidden></ul>
+      </div>
       <div class="dial">
         <output id="playerOut">0.30</output>
         <input type="range" id="playerRange" min="0.01" max="2.50" step="0.01" value="0.30">
@@ -51,10 +52,11 @@
 
     <article class="pick" data-category="team">
       <h2>Tip na tým</h2>
-      <label class="field">
+      <div class="field combo" data-combo="team">
         <span>Tým</span>
-        <select id="teamSelect"></select>
-      </label>
+        <input type="text" id="teamSearch" autocomplete="off" placeholder="Začni psát název…" role="combobox" aria-expanded="false" aria-controls="teamList">
+        <ul class="options" id="teamList" role="listbox" hidden></ul>
+      </div>
       <div class="dial">
         <output id="teamOut">1.40</output>
         <input type="range" id="teamRange" min="0.01" max="5.00" step="0.01" value="1.40">
@@ -112,7 +114,7 @@
   <p>xGuesser · neoficiální fanouškovský projekt · data xG pocházejí z veřejných zdrojů Premier League</p>
 </footer>
 
-<script>window.GOOGLE_CLIENT_ID = "82272052763-bjr2jke27sv02bt9gst4d3jsjo8e32mn.apps.googleusercontent.com";</script>
+<script>window.GOOGLE_CLIENT_ID = "__GOOGLE_CLIENT_ID__";</script>
 <script src="/app.js"></script>
 </body>
 </html>
