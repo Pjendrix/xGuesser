@@ -1,4 +1,5 @@
 import { json, bad, requireUser } from "../../_lib.js";
+import { ensureFeatured } from "../../_featured.js";
 
 // POST /api/admin/sync-fpl
 // Natáhne týmy, hráče a nejbližší kolo z veřejného FPL API.
@@ -53,7 +54,8 @@ export async function onRequestPost({ request, env }) {
       `INSERT INTO gameweeks (id, season, deadline, status) VALUES (?1, ?2, ?3, 'open')
        ON CONFLICT(id) DO UPDATE SET deadline = ?3`
     ).bind(next.id, `${season}/${Number(season) + 1 - 2000}`, next.deadline_time).run();
-    gameweek = { id: next.id, deadline: next.deadline_time };
+    const featured = await ensureFeatured(env, next.id, data.elements);
+    gameweek = { id: next.id, deadline: next.deadline_time, featured_player_id: featured };
   }
 
   return json({ ok: true, teams: data.teams.length, players: players.length, gameweek });
