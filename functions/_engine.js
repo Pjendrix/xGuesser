@@ -4,6 +4,10 @@
 import { ensureFeatured } from "./_featured.js";
 
 const FPL = "https://fantasy.premierleague.com/api";
+
+// Bodování podle Formule 1: prvních deset bodovaných, zbytek nula.
+const POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+export const pointsFor = (rank) => POINTS[rank - 1] ?? 0;
 const UA = { "user-agent": "xguesser/1.0" };
 
 async function fpl(path) {
@@ -86,7 +90,7 @@ async function settle(env, gameweekId) {
     );
     await env.DB.batch(scored.map((s, i) =>
       sStmt.bind(gameweekId, category, s.user_id, s.abs, s.signed, i + 1,
-        Math.max(1, scored.length - i))
+        pointsFor(i + 1))
     ));
 
     log[category] = scored.length;
