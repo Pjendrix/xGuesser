@@ -309,3 +309,6 @@ main > .hero:first-child { margin-top: -1px; }
   .ranks li.season { grid-template-columns: 2.2rem minmax(0, 1fr) auto auto; }
   .medals { grid-column: auto; }
 }
+
+/* hidden musí přebít display:flex výše */
+[hidden] { display: none !important; }
