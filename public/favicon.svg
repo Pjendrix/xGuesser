@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#071120"/>
+  <circle cx="32" cy="32" r="24" fill="none" stroke="#1E3A57" stroke-width="2"/>
+  <text x="17" y="43" font-family="Archivo, Arial Black, sans-serif" font-weight="900"
+        font-size="30" fill="#FF7A29">x</text>
+  <text x="31" y="43" font-family="Archivo, Arial Black, sans-serif" font-weight="900"
+        font-size="30" fill="#4CC3FF">G</text>
+</svg>

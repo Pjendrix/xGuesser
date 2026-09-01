@@ -57,6 +57,7 @@ h1, h2 { font-family: Archivo, system-ui, sans-serif; font-weight: 900; letter-s
 /* picks */
 .picks { display: grid; gap: 1.25rem; grid-template-columns: 1fr; }
 @media (min-width: 46rem) { .picks { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 68rem) { .picks { grid-template-columns: repeat(3, 1fr); } }
 
 .pick {
   background: linear-gradient(180deg, var(--panel), #0B1A2D);
@@ -164,7 +165,7 @@ footer p { color: var(--muted); font-size: .82rem; margin: 1rem 0 0; }
 }
 .mine h2 { margin: 0 0 .9rem; font-size: 1rem; letter-spacing: 0; }
 .mine-grid { display: grid; gap: .6rem; grid-template-columns: 1fr; }
-@media (min-width: 40rem) { .mine-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 40rem) { .mine-grid { grid-template-columns: repeat(3, 1fr); } }
 .slot {
   display: grid; grid-template-columns: 3.4rem 1fr auto; align-items: baseline;
   gap: .6rem; padding: .55rem .7rem;
@@ -181,3 +182,15 @@ footer p { color: var(--muted); font-size: .82rem; margin: 1rem 0 0; }
 }
 .lock { margin: .8rem 0 0; font-size: .84rem; color: var(--muted); }
 .one { margin: -.5rem 0 1rem; font-size: .8rem; color: var(--muted); }
+
+/* --- player of the round --- */
+.pick-featured { border-color: var(--strike); }
+.pick-featured h2 { color: var(--strike); }
+.drawn {
+  display: grid; gap: .15rem; margin-bottom: 1rem;
+  padding: .7rem .8rem; border-radius: 9px;
+  background: #081525; border: 1px solid var(--line);
+}
+.drawn strong { font-family: Archivo, sans-serif; font-size: 1.15rem; }
+.drawn span { color: var(--muted); font-size: .84rem; }
+.tabs { flex-wrap: wrap; }

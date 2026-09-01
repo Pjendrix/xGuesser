@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="cs">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>xGuesser — Premier League xG Challenge</title>
-<meta name="description" content="Tipni xG hráče i celého týmu v každém kole Premier League. Kdo je nejblíž realitě, vede žebříček.">
+<meta name="description" content="Guess the expected goals of a player, a team and the drawn player of the round. Closest to the official data tops the table.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,26 +24,32 @@
 <main>
 
   <section class="hero">
-    <p class="deadline" id="deadline">Načítám kolo…</p>
-    <h1>Kolik <em>xG</em> to bude?</h1>
+    <p class="deadline" id="deadline">Loading gameweek…</p>
+    <h1>How much <em>xG</em> will it be?</h1>
     <p class="lede">
-      Každé kolo Premier League tipuješ dvakrát: očekávané góly jednoho hráče
-      a očekávané góly jednoho celého týmu. Vyhrává ten, kdo je nejblíž
-      oficiálním datům. Při stejné odchylce má přednost vyšší tip.
+      Three picks every Premier League gameweek: the expected goals of a player
+      you choose, of a whole team, and of the player of the round drawn for
+      everyone alike. Closest to the official data wins. On a tie, the higher
+      pick takes it.
     </p>
   </section>
 
   <section class="mine" id="mine" hidden>
-    <h2>Moje tipy pro toto kolo</h2>
+    <h2>Your picks this gameweek</h2>
     <div class="mine-grid">
+      <div class="slot" id="slotFeatured">
+        <span class="slot-cat">Round</span>
+        <strong class="slot-name">nothing yet</strong>
+        <span class="slot-xg">—</span>
+      </div>
       <div class="slot" id="slotPlayer">
-        <span class="slot-cat">Hráč</span>
-        <strong class="slot-name">zatím nic</strong>
+        <span class="slot-cat">Player</span>
+        <strong class="slot-name">nothing yet</strong>
         <span class="slot-xg">—</span>
       </div>
       <div class="slot" id="slotTeam">
-        <span class="slot-cat">Tým</span>
-        <strong class="slot-name">zatím nic</strong>
+        <span class="slot-cat">Team</span>
+        <strong class="slot-name">nothing yet</strong>
         <span class="slot-xg">—</span>
       </div>
     </div>
@@ -51,75 +58,93 @@
 
   <section class="picks" id="picks" hidden>
 
+    <article class="pick pick-featured" data-category="featured">
+      <h2>Player of the round</h2>
+      <p class="one">Drawn for everyone. Same player, same gameweek.</p>
+      <div class="drawn" id="drawn">
+        <strong id="drawnName">—</strong>
+        <span id="drawnTeam"></span>
+      </div>
+      <div class="dial">
+        <output id="featuredOut">0.30</output>
+        <input type="range" id="featuredRange" min="0.01" max="2.50" step="0.01" value="0.30">
+        <input type="number" id="featuredNum" min="0.01" max="10" step="0.01" value="0.30" aria-label="xG of the player of the round">
+      </div>
+      <button class="save" data-category="featured">Save round pick</button>
+      <p class="msg" data-msg="featured"></p>
+    </article>
+
     <article class="pick" data-category="player">
-      <h2>Tip na hráče</h2>
-      <p class="one">Jeden tip na kolo. Uložením přepíšeš předchozí.</p>
+      <h2>Your player</h2>
+      <p class="one">One pick per gameweek. Saving overwrites the previous one.</p>
       <div class="field combo" data-combo="player">
-        <span>Hráč</span>
-        <input type="text" id="playerSearch" autocomplete="off" placeholder="Začni psát jméno…" role="combobox" aria-expanded="false" aria-controls="playerList">
+        <span>Player</span>
+        <input type="text" id="playerSearch" autocomplete="off" placeholder="Start typing a name…" role="combobox" aria-expanded="false" aria-controls="playerList">
         <ul class="options" id="playerList" role="listbox" hidden></ul>
       </div>
       <div class="dial">
         <output id="playerOut">0.30</output>
         <input type="range" id="playerRange" min="0.01" max="2.50" step="0.01" value="0.30">
-        <input type="number" id="playerNum" min="0.01" max="10" step="0.01" value="0.30" aria-label="xG hráče">
+        <input type="number" id="playerNum" min="0.01" max="10" step="0.01" value="0.30" aria-label="Player xG">
       </div>
-      <button class="save" data-category="player">Uložit tip na hráče</button>
+      <button class="save" data-category="player">Save player pick</button>
       <p class="msg" data-msg="player"></p>
     </article>
 
     <article class="pick" data-category="team">
-      <h2>Tip na tým</h2>
-      <p class="one">Jeden tip na kolo. Uložením přepíšeš předchozí.</p>
+      <h2>Your team</h2>
+      <p class="one">One pick per gameweek. Saving overwrites the previous one.</p>
       <div class="field combo" data-combo="team">
-        <span>Tým</span>
-        <input type="text" id="teamSearch" autocomplete="off" placeholder="Začni psát název…" role="combobox" aria-expanded="false" aria-controls="teamList">
+        <span>Team</span>
+        <input type="text" id="teamSearch" autocomplete="off" placeholder="Start typing a name…" role="combobox" aria-expanded="false" aria-controls="teamList">
         <ul class="options" id="teamList" role="listbox" hidden></ul>
       </div>
       <div class="dial">
         <output id="teamOut">1.40</output>
         <input type="range" id="teamRange" min="0.01" max="5.00" step="0.01" value="1.40">
-        <input type="number" id="teamNum" min="0.01" max="10" step="0.01" value="1.40" aria-label="xG týmu">
+        <input type="number" id="teamNum" min="0.01" max="10" step="0.01" value="1.40" aria-label="Team xG">
       </div>
-      <button class="save" data-category="team">Uložit tip na tým</button>
+      <button class="save" data-category="team">Save team pick</button>
       <p class="msg" data-msg="team"></p>
     </article>
 
   </section>
 
-  <p class="gate" id="gate">Přihlas se Google účtem a odešli tipy pro nadcházející kolo.</p>
+  <p class="gate" id="gate">Sign in with Google to submit your picks for the upcoming gameweek.</p>
 
   <section class="board">
-    <h2>Žebříček</h2>
+    <h2>Leaderboards</h2>
     <div class="tabs" role="tablist">
-      <button class="tab is-on" data-cat="player" role="tab">Hráči</button>
-      <button class="tab" data-cat="team" role="tab">Týmy</button>
+      <button class="tab is-on" data-cat="featured" role="tab">Player of the round</button>
+      <button class="tab" data-cat="player" role="tab">Players</button>
+      <button class="tab" data-cat="team" role="tab">Teams</button>
     </div>
-    <ol class="ranks" id="ranks"><li class="empty">Zatím žádné vyhodnocené kolo.</li></ol>
+    <ol class="ranks" id="ranks"><li class="empty">No gameweek has been settled yet.</li></ol>
   </section>
 
   <section class="rules">
-    <h2>Jak se počítá pořadí</h2>
+    <h2>How the ranking works</h2>
     <p>
-      Rozhoduje absolutní odchylka tipu od oficiálního xG. Když jsou dva tipy
-      stejně daleko, výš skončí ten vyšší — při reálných 0.15 xG je tip 0.16
-      před tipem 0.14. Nejnižší povolená hodnota je 0.01, takže nulové alibi
-      u brankářů neprojde. Tipy se zamykají v okamžiku výkopu prvního zápasu kola.
+      What counts is the absolute gap between your pick and the official xG.
+      When two picks sit the same distance away, the higher one ranks above:
+      against a real 0.15 xG, a pick of 0.16 beats 0.14. The floor is 0.01, so
+      hiding behind a zero for goalkeepers is off the table. Picks lock the
+      moment the first match of the gameweek kicks off.
     </p>
   </section>
 
   <section class="contact">
-    <h2>Napiš autorovi</h2>
+    <h2>Contact the author</h2>
     <form id="contactForm" action="https://formspree.io/f/xyegyyjo" method="POST">
       <label class="field">
-        <span>Tvůj e-mail</span>
-        <input type="email" name="email" required placeholder="ty@example.com">
+        <span>Your email</span>
+        <input type="email" name="email" required placeholder="you@example.com">
       </label>
       <label class="field">
-        <span>Zpráva</span>
-        <textarea name="message" rows="4" required placeholder="Nápad, chyba, nebo spor o xG."></textarea>
+        <span>Message</span>
+        <textarea name="message" rows="4" required placeholder="An idea, a bug, or an argument about xG."></textarea>
       </label>
-      <button type="submit">Odeslat zprávu</button>
+      <button type="submit">Send message</button>
       <p class="msg" id="contactMsg"></p>
     </form>
   </section>
@@ -128,12 +153,12 @@
 
 <footer>
   <a class="coffee" href="https://buymeacoffee.com/pjx88" target="_blank" rel="noopener">
-    Buy me a Coffee — podpoř provoz webu
+    Buy me a Coffee — support the site
   </a>
-  <p>xGuesser · neoficiální fanouškovský projekt · data xG pocházejí z veřejných zdrojů Premier League</p>
+  <p>xGuesser · an unofficial fan project · xG data from public Premier League sources</p>
 </footer>
 
-<script>window.GOOGLE_CLIENT_ID = "__GOOGLE_CLIENT_ID__";</script>
+<script>window.GOOGLE_CLIENT_ID = "82272052763-bjr2jke27sv02bt9gst4d3jsjo8e32mn.apps.googleusercontent.com";</script>
 <script src="/app.js"></script>
 </body>
 </html>

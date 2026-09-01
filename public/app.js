@@ -1,5 +1,6 @@
 const $ = (s) => document.querySelector(s);
-let state = { user: null, gameweek: null, player: [], team: [], chosen: {}, saved: {} };
+const CATS = ["featured", "player", "team"];
+let state = { user: null, gameweek: null, featured: null, player: [], team: [], chosen: {}, saved: {} };
 
 /* ---------- Google Sign-In ---------- */
 window.onload = () => {
@@ -32,12 +33,12 @@ function renderAccount() {
   const name = document.createElement("span");
   name.textContent = state.user.name;
   const out = document.createElement("button");
-  out.className = "signout"; out.textContent = "Odhlásit";
+  out.className = "signout"; out.textContent = "Sign out";
   out.onclick = async () => { await fetch("/api/auth/me", { method: "DELETE" }); location.reload(); };
   box.append(name, out);
 }
 
-/* ---------- Vyhledávací pole ---------- */
+/* ---------- Searchable inputs ---------- */
 function label(cat, item) {
   return cat === "player" ? `${item.name} · ${item.team}` : item.name;
 }
@@ -63,7 +64,7 @@ function wireCombo(cat) {
     ).slice(0, 8);
 
     if (!pool.length) {
-      list.innerHTML = '<li class="none">Nic takového tu není.</li>';
+      list.innerHTML = '<li class="none">Nothing matches that.</li>';
       list.hidden = false;
       return;
     }
@@ -117,39 +118,45 @@ function wireDial(cat) {
   show(range.value);
 }
 
+/* ---------- Your picks ---------- */
+const SLOT = { featured: "#slotFeatured", player: "#slotPlayer", team: "#slotTeam" };
 
-/* ---------- Moje tipy ---------- */
 function renderMine() {
   const box = $("#mine");
   if (!state.user || !state.gameweek) { box.hidden = true; return; }
   box.hidden = false;
 
-  for (const cat of ["player", "team"]) {
-    const slot = $(cat === "player" ? "#slotPlayer" : "#slotTeam");
+  for (const cat of CATS) {
+    const slot = $(SLOT[cat]);
     const s = state.saved[cat];
     const nameEl = slot.querySelector(".slot-name");
     const xgEl = slot.querySelector(".slot-xg");
     if (!s) {
       slot.classList.remove("is-set");
-      nameEl.textContent = "zatím nic";
+      nameEl.textContent = "nothing yet";
       xgEl.textContent = "—";
+      continue;
+    }
+    slot.classList.add("is-set");
+    if (cat === "featured") {
+      nameEl.textContent = state.featured
+        ? `${state.featured.name} · ${state.featured.team}` : `#${s.subject_id}`;
     } else {
       const item = state[cat].find((x) => x.id === s.subject_id);
-      slot.classList.add("is-set");
       nameEl.textContent = item ? label(cat, item) : `#${s.subject_id}`;
-      xgEl.textContent = Number(s.xg).toFixed(2) + " xG";
     }
+    xgEl.textContent = Number(s.xg).toFixed(2) + " xG";
   }
 
   const lock = $("#lock");
   const d = new Date(state.gameweek.deadline);
   if (!state.gameweek.open) {
-    lock.textContent = "Kolo je uzamčené, tipy už měnit nejdou.";
+    lock.textContent = "This gameweek is locked, picks can no longer be changed.";
   } else {
     const h = Math.max(0, Math.round((d - Date.now()) / 3600000));
     lock.textContent = h > 48
-      ? `Změnit je můžeš do ${d.toLocaleString("cs-CZ", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}.`
-      : `Zbývá zhruba ${h} h na úpravy.`;
+      ? `You can change them until ${d.toLocaleString("en-GB", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}.`
+      : `About ${h} h left to edit.`;
   }
 }
 
@@ -161,23 +168,32 @@ async function load() {
 
   const data = await (await fetch("/api/gameweek")).json();
   state.gameweek = data.gameweek;
+  state.featured = data.featured || null;
   state.player = data.players || [];
   state.team = data.teams || [];
+  state.saved = data.picks || {};
 
   const dl = $("#deadline");
   if (!data.gameweek) {
-    dl.textContent = "Další kolo se připravuje.";
+    dl.textContent = "The next gameweek is being prepared.";
   } else {
     const d = new Date(data.gameweek.deadline);
     dl.textContent = data.gameweek.open
-      ? `Kolo ${data.gameweek.id} · tipy do ${d.toLocaleString("cs-CZ", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}`
-      : `Kolo ${data.gameweek.id} · tipy jsou uzamčené`;
+      ? `Gameweek ${data.gameweek.id} · picks until ${d.toLocaleString("en-GB", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}`
+      : `Gameweek ${data.gameweek.id} · picks are locked`;
   }
 
-  state.saved = data.picks || {};
+  const card = document.querySelector(".pick-featured");
+  if (state.featured) {
+    $("#drawnName").textContent = state.featured.name;
+    $("#drawnTeam").textContent = `${state.featured.team_name} · ${state.featured.position}`;
+    card.hidden = false;
+  } else {
+    card.hidden = true;
+  }
 
   for (const cat of ["player", "team"]) {
-    const p = data.picks[cat];
+    const p = state.saved[cat];
     if (!p) continue;
     const item = state[cat].find((x) => x.id === p.subject_id);
     if (item) {
@@ -189,13 +205,17 @@ async function load() {
     $(`#${cat}Num`).value = p.xg;
     $(`#${cat}Num`).dispatchEvent(new Event("input"));
   }
+  if (state.saved.featured) {
+    $("#featuredNum").value = state.saved.featured.xg;
+    $("#featuredNum").dispatchEvent(new Event("input"));
+  }
 
   const canPlay = state.user && data.gameweek && data.gameweek.open;
   $("#picks").hidden = !canPlay;
   $("#gate").hidden = !!canPlay;
-  if (!state.user) $("#gate").textContent = "Přihlas se Google účtem a odešli tipy pro nadcházející kolo.";
-  else if (!data.gameweek) $("#gate").textContent = "Jakmile se otevře další kolo, objeví se tu tipovací formulář.";
-  else if (!data.gameweek.open) $("#gate").textContent = "Tipy pro toto kolo jsou uzamčené. Výsledky doplníme po dohrání kola.";
+  if (!state.user) $("#gate").textContent = "Sign in with Google to submit your picks for the upcoming gameweek.";
+  else if (!data.gameweek) $("#gate").textContent = "The picking form will appear as soon as the next gameweek opens.";
+  else if (!data.gameweek.open) $("#gate").textContent = "Picks for this gameweek are locked. Results follow once the round is played out.";
 
   renderMine();
 }
@@ -204,17 +224,19 @@ document.querySelectorAll("button.save").forEach((btn) => {
   btn.addEventListener("click", async () => {
     const cat = btn.dataset.category;
     const msg = document.querySelector(`[data-msg="${cat}"]`);
-    const subject_id = state.chosen[cat];
+    const subject_id = cat === "featured"
+      ? (state.featured ? state.featured.id : null)
+      : state.chosen[cat];
 
     if (!subject_id) {
       msg.className = "msg err";
-      msg.textContent = cat === "player" ? "Vyber hráče ze seznamu." : "Vyber tým ze seznamu.";
+      msg.textContent = cat === "team" ? "Pick a team from the list." : "Pick a player from the list.";
       return;
     }
 
     const xg = Number($(`#${cat}Num`).value.replace(",", "."));
     btn.disabled = true;
-    msg.className = "msg"; msg.textContent = "Ukládám…";
+    msg.className = "msg"; msg.textContent = "Saving…";
     const r = await fetch("/api/picks", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -223,9 +245,9 @@ document.querySelectorAll("button.save").forEach((btn) => {
     const out = await r.json();
     btn.disabled = false;
     msg.className = "msg " + (r.ok ? "ok" : "err");
-    msg.textContent = r.ok ? `Uloženo: ${out.xg.toFixed(2)} xG` : out.error;
+    msg.textContent = r.ok ? `Saved: ${out.xg.toFixed(2)} xG` : out.error;
     if (r.ok) {
-      state.saved[cat] = { subject_id, xg: out.xg };
+      state.saved[cat] = { subject_id: out.subject_id, xg: out.xg };
       renderMine();
     }
   });
@@ -236,14 +258,14 @@ async function loadBoard(cat) {
   const list = $("#ranks");
   const data = await (await fetch(`/api/leaderboard?category=${cat}`)).json();
   if (!data.rows.length) {
-    list.innerHTML = '<li class="empty">Zatím žádné vyhodnocené kolo.</li>';
+    list.innerHTML = '<li class="empty">No gameweek has been settled yet.</li>';
     return;
   }
   list.innerHTML = data.rows.map((r, i) => `
     <li>
       <span class="pos">${i + 1}</span>
       <span>${r.name}</span>
-      <span class="diff">${r.points} b · ø ${Number(r.avg_diff).toFixed(2)}</span>
+      <span class="diff">${r.points} pts · avg ${Number(r.avg_diff).toFixed(2)}</span>
     </li>`).join("");
 }
 
@@ -259,20 +281,21 @@ document.querySelectorAll(".tab").forEach((t) => {
 $("#contactForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target, msg = $("#contactMsg");
-  msg.className = "msg"; msg.textContent = "Odesílám…";
+  msg.className = "msg"; msg.textContent = "Sending…";
   const r = await fetch(form.action, {
     method: "POST",
     headers: { Accept: "application/json" },
     body: new FormData(form),
   });
   msg.className = "msg " + (r.ok ? "ok" : "err");
-  msg.textContent = r.ok ? "Zpráva odešla. Díky!" : "Odeslání selhalo, zkus to prosím znovu.";
+  msg.textContent = r.ok ? "Message sent. Thanks!" : "Sending failed, please try again.";
   if (r.ok) form.reset();
 });
 
 wireCombo("player");
 wireCombo("team");
+wireDial("featured");
 wireDial("player");
 wireDial("team");
 load();
-loadBoard("player");
+loadBoard("featured");
