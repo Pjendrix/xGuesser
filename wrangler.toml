@@ -5,7 +5,7 @@ compatibility_date = "2026-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "xguesser"
-database_id = "<vlož ID z wrangler d1 create>"
+database_id = "de099d3f-6040-4ab2-93b4-15cf619eb6b7"
 
 # GOOGLE_CLIENT_ID a SESSION_SECRET nastav jako secrets,
 # ne tady v souboru:
