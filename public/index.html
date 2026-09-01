@@ -38,19 +38,19 @@
     <h2>Your picks this gameweek</h2>
     <div class="mine-grid">
       <div class="slot" id="slotFeatured">
-        <span class="slot-cat">Round</span>
+        <span class="slot-badge"><span class="badge is-empty">—</span></span>
         <strong class="slot-name">nothing yet</strong>
-        <span class="slot-xg">—</span>
+        <span class="slot-xg"></span>
       </div>
       <div class="slot" id="slotPlayer">
-        <span class="slot-cat">Player</span>
+        <span class="slot-badge"><span class="badge is-empty">—</span></span>
         <strong class="slot-name">nothing yet</strong>
-        <span class="slot-xg">—</span>
+        <span class="slot-xg"></span>
       </div>
       <div class="slot" id="slotTeam">
-        <span class="slot-cat">Team</span>
+        <span class="slot-badge"><span class="badge is-empty">—</span></span>
         <strong class="slot-name">nothing yet</strong>
-        <span class="slot-xg">—</span>
+        <span class="slot-xg"></span>
       </div>
     </div>
     <p class="lock" id="lock"></p>
@@ -62,8 +62,11 @@
       <h2>Player of the round</h2>
       <p class="one">Drawn for everyone. Same player, same gameweek.</p>
       <div class="drawn" id="drawn">
-        <strong id="drawnName">—</strong>
-        <span id="drawnTeam"></span>
+        <span id="drawnBadge"><span class="badge is-empty">—</span></span>
+        <div class="drawn-text">
+          <strong id="drawnName">—</strong>
+          <span id="drawnTeam"></span>
+        </div>
       </div>
       <div class="dial">
         <output id="featuredOut">0.30</output>

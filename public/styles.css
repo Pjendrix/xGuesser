@@ -167,23 +167,20 @@ footer p { color: var(--muted); font-size: .82rem; margin: 1rem 0 0; }
 .mine-grid { display: grid; gap: .6rem; grid-template-columns: 1fr; }
 @media (min-width: 40rem) { .mine-grid { grid-template-columns: repeat(3, 1fr); } }
 .slot {
-  display: grid; grid-template-columns: 1fr auto; align-items: baseline;
-  gap: .1rem .6rem; padding: .55rem .7rem; min-width: 0;
+  display: flex; align-items: center; gap: .6rem;
+  padding: .5rem .65rem; min-width: 0;
   border: 1px dashed var(--line); border-radius: 9px;
 }
 .slot.is-set { border-style: solid; border-color: var(--beam); }
-.slot-cat {
-  grid-column: 1 / -1;
-  color: var(--muted); font-size: .7rem;
-  text-transform: uppercase; letter-spacing: .06em;
-}
+.slot-badge { flex: none; display: flex; }
 .slot-name {
-  font-weight: 600; font-size: .95rem; min-width: 0;
+  flex: 1 1 auto; font-weight: 600; font-size: .93rem; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .slot.is-set .slot-name { color: var(--chalk); }
 .slot:not(.is-set) .slot-name { color: var(--muted); font-weight: 400; }
 .slot-xg {
+  flex: none;
   font-family: Archivo, sans-serif; font-weight: 700;
   color: var(--beam); font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -209,3 +206,30 @@ footer p { color: var(--muted); font-size: .82rem; margin: 1rem 0 0; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .pick { min-width: 0; }
+
+/* --- team badges --- */
+.badge {
+  display: inline-grid; place-items: center;
+  width: 2rem; height: 2rem; flex: none;
+  border-radius: 7px;
+  background: var(--bg); color: var(--fg);
+  font-family: Archivo, sans-serif; font-weight: 900;
+  font-size: .62rem; letter-spacing: .02em;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+}
+.badge.is-empty {
+  background: transparent; color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-weight: 400;
+}
+.drawn {
+  display: flex; align-items: center; gap: .7rem;
+}
+.drawn .badge { width: 2.5rem; height: 2.5rem; font-size: .72rem; }
+.drawn-text { display: grid; gap: .1rem; min-width: 0; }
+.options li {
+  display: flex; align-items: center; gap: .55rem;
+}
+.options li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.options li .badge { width: 1.7rem; height: 1.7rem; font-size: .55rem; border-radius: 5px; }
+.options li.none { display: block; }

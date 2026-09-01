@@ -69,7 +69,7 @@ function wireCombo(cat) {
       return;
     }
     list.innerHTML = pool.map((i, n) =>
-      `<li role="option" data-id="${i.id}" data-n="${n}">${label(cat, i)}</li>`).join("");
+      `<li role="option" data-id="${i.id}" data-n="${n}">${badgeHtml(cat === "team" ? i.short_name : i.team)}<span>${i.name}</span></li>`).join("");
     list.hidden = false;
     input.setAttribute("aria-expanded", "true");
     list.querySelectorAll("li[data-id]").forEach((li) => {
@@ -118,6 +118,36 @@ function wireDial(cat) {
   show(range.value);
 }
 
+
+/* ---------- Team badges ---------- */
+const TEAM_COLOURS = {
+  ARS: ["#EF0107", "#FFFFFF"], AVL: ["#670E36", "#95BFE5"], BOU: ["#DA291C", "#FFFFFF"],
+  BRE: ["#D20000", "#FFFFFF"], BHA: ["#0057B8", "#FFCD00"], BUR: ["#6C1D45", "#F4C300"],
+  CHE: ["#034694", "#FFFFFF"], COV: ["#4B92DB", "#FFFFFF"], CRY: ["#1B458F", "#C4122E"],
+  EVE: ["#003399", "#FFFFFF"], FUL: ["#000000", "#FFFFFF"], HUL: ["#F5A12D", "#000000"],
+  IPS: ["#0044A9", "#FFFFFF"], LEE: ["#FFCD00", "#1D428A"], LEI: ["#003090", "#FDBE11"],
+  LIV: ["#C8102E", "#FFFFFF"], MCI: ["#6CABDD", "#1C2C5B"], MUN: ["#DA291C", "#FBE122"],
+  NEW: ["#241F20", "#FFFFFF"], NFO: ["#DD0000", "#FFFFFF"], SOU: ["#D71920", "#FFFFFF"],
+  SUN: ["#EB172B", "#FFFFFF"], TOT: ["#132257", "#FFFFFF"], WHU: ["#7A263A", "#1BB1E7"],
+  WOL: ["#FDB913", "#231F20"],
+};
+
+function badgeHtml(short) {
+  const key = (short || "").toUpperCase();
+  const [bg, fg] = TEAM_COLOURS[key] || ["#1E3A57", "#EAF2FB"];
+  return `<span class="badge" style="--bg:${bg};--fg:${fg}">${key || "??"}</span>`;
+}
+
+function shortOf(cat, s) {
+  if (cat === "featured") return state.featured ? state.featured.team : "";
+  if (cat === "team") {
+    const t = state.team.find((x) => x.id === s.subject_id);
+    return t ? t.short_name : "";
+  }
+  const p = state.player.find((x) => x.id === s.subject_id);
+  return p ? p.team : "";
+}
+
 /* ---------- Your picks ---------- */
 const SLOT = { featured: "#slotFeatured", player: "#slotPlayer", team: "#slotTeam" };
 
@@ -126,26 +156,36 @@ function renderMine() {
   if (!state.user || !state.gameweek) { box.hidden = true; return; }
   box.hidden = false;
 
+  const EMPTY = { featured: "no round pick", player: "no player pick", team: "no team pick" };
+
   for (const cat of CATS) {
     const slot = $(SLOT[cat]);
     const s = state.saved[cat];
+    const badgeEl = slot.querySelector(".slot-badge");
     const nameEl = slot.querySelector(".slot-name");
     const xgEl = slot.querySelector(".slot-xg");
+
     if (!s) {
       slot.classList.remove("is-set");
-      nameEl.textContent = "nothing yet";
-      xgEl.textContent = "—";
+      badgeEl.innerHTML = '<span class="badge is-empty">—</span>';
+      nameEl.textContent = EMPTY[cat];
+      xgEl.textContent = "";
       continue;
     }
+
     slot.classList.add("is-set");
+    badgeEl.innerHTML = badgeHtml(shortOf(cat, s));
+
     if (cat === "featured") {
-      nameEl.textContent = state.featured
-        ? `${state.featured.name} · ${state.featured.team}` : `#${s.subject_id}`;
+      nameEl.textContent = state.featured ? state.featured.name : `#${s.subject_id}`;
+    } else if (cat === "team") {
+      const t = state.team.find((x) => x.id === s.subject_id);
+      nameEl.textContent = t ? t.name : `#${s.subject_id}`;
     } else {
-      const item = state[cat].find((x) => x.id === s.subject_id);
-      nameEl.textContent = item ? label(cat, item) : `#${s.subject_id}`;
+      const p = state.player.find((x) => x.id === s.subject_id);
+      nameEl.textContent = p ? p.name : `#${s.subject_id}`;
     }
-    xgEl.textContent = Number(s.xg).toFixed(2) + " xG";
+    xgEl.textContent = Number(s.xg).toFixed(2);
   }
 
   const lock = $("#lock");
@@ -187,6 +227,7 @@ async function load() {
   if (state.featured) {
     $("#drawnName").textContent = state.featured.name;
     $("#drawnTeam").textContent = `${state.featured.team_name} · ${state.featured.position}`;
+    $("#drawnBadge").innerHTML = badgeHtml(state.featured.team);
     card.hidden = false;
   } else {
     card.hidden = true;
