@@ -295,26 +295,93 @@ document.querySelectorAll("button.save").forEach((btn) => {
 });
 
 /* ---------- Leaderboard ---------- */
-async function loadBoard(cat) {
+let board = { cat: "featured", gw: null, sort: "points" };
+
+function fmt(n) { return n == null ? "—" : Number(n).toFixed(2); }
+
+async function loadBoard() {
   const list = $("#ranks");
-  const data = await (await fetch(`/api/leaderboard?category=${cat}`)).json();
+  const q = board.gw ? `&gw=${board.gw}` : `&sort=${board.sort}`;
+  const data = await (await fetch(`/api/leaderboard?category=${board.cat}${q}`)).json();
+
+  const scope = $("#scope");
+  const tabs = [`<button class="chip${board.gw ? "" : " is-on"}" data-gw="">Season</button>`]
+    .concat((data.gameweeks || []).map((g) =>
+      `<button class="chip${board.gw === g ? " is-on" : ""}" data-gw="${g}">GW ${g}</button>`));
+  scope.innerHTML = tabs.join("");
+  scope.querySelectorAll(".chip").forEach((c) => {
+    c.addEventListener("click", () => {
+      board.gw = c.dataset.gw ? Number(c.dataset.gw) : null;
+      loadBoard();
+    });
+  });
+
+  const sortBox = $("#sortBy");
+  sortBox.hidden = !!board.gw;
+  if (!board.gw) {
+    sortBox.innerHTML = [
+      ["points", "By points"],
+      ["podium", "By podiums"],
+    ].map(([k, lbl]) =>
+      `<button class="chip${board.sort === k ? " is-on" : ""}" data-sort="${k}">${lbl}</button>`
+    ).join("");
+    sortBox.querySelectorAll(".chip").forEach((c) => {
+      c.addEventListener("click", () => { board.sort = c.dataset.sort; loadBoard(); });
+    });
+  }
+
+  const note = $("#drawnNote");
+  if (data.subject) {
+    note.hidden = false;
+    note.innerHTML = `${badgeHtml(data.subject.short)}<span>Everyone guessed <strong>${data.subject.name}</strong> — he finished on <strong>${fmt(data.subject.actual_xg)} xG</strong></span>`;
+  } else {
+    note.hidden = true;
+  }
+
   if (!data.rows.length) {
     list.innerHTML = '<li class="empty">No gameweek has been settled yet.</li>';
     return;
   }
-  list.innerHTML = data.rows.map((r, i) => `
-    <li>
-      <span class="pos">${i + 1}</span>
-      <span>${r.name}</span>
-      <span class="diff">${r.points} pts · avg ${Number(r.avg_diff).toFixed(2)}</span>
-    </li>`).join("");
+
+  if (data.scope === "season") {
+    list.innerHTML = data.rows.map((r, i) => {
+      const medals = `<span class="medals">
+        <span class="m m1" title="wins">${r.gold || 0}</span>
+        <span class="m m2" title="second places">${r.silver || 0}</span>
+        <span class="m m3" title="third places">${r.bronze || 0}</span></span>`;
+      const tail = board.sort === "podium"
+        ? `${r.points} pts`
+        : `${r.points} pts · avg ${fmt(r.avg_diff)}`;
+      return `
+      <li class="season">
+        <span class="pos">${i + 1}</span>
+        <span class="who">${r.name}</span>
+        ${medals}
+        <span class="diff">${tail}</span>
+      </li>`;
+    }).join("");
+    return;
+  }
+
+  list.innerHTML = data.rows.map((r) => {
+    const pickedName = board.cat === "featured"
+      ? "" : (r.subject ? `${badgeHtml(r.subject.short)}<span class="picked">${r.subject.name}</span>` : "");
+    return `
+      <li class="detail">
+        <span class="pos">${r.rank}</span>
+        <span class="who">${r.name}</span>
+        <span class="pickcell">${pickedName}</span>
+        <span class="diff"><strong>${fmt(r.pick_xg)}</strong> vs ${fmt(r.actual_xg)} · ${r.points} pts</span>
+      </li>`;
+  }).join("");
 }
 
 document.querySelectorAll(".tab").forEach((t) => {
   t.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach((x) => x.classList.remove("is-on"));
     t.classList.add("is-on");
-    loadBoard(t.dataset.cat);
+    board.cat = t.dataset.cat;
+    loadBoard();
   });
 });
 
@@ -339,4 +406,4 @@ wireDial("featured");
 wireDial("player");
 wireDial("team");
 load();
-loadBoard("featured");
+loadBoard();
