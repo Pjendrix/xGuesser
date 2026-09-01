@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>xGuesser — Premier League xG Challenge</title>
+<meta name="description" content="Tipni xG hráče i celého týmu v každém kole Premier League. Kdo je nejblíž realitě, vede žebříček.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<header class="top">
+  <a class="wordmark" href="/"><span>x</span>Guesser</a>
+  <div id="account" class="account">
+    <div id="gsi" class="gsi"></div>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <p class="deadline" id="deadline">Načítám kolo…</p>
+    <h1>Kolik <em>xG</em> to bude?</h1>
+    <p class="lede">
+      Každé kolo Premier League tipuješ dvakrát: očekávané góly jednoho hráče
+      a očekávané góly jednoho celého týmu. Vyhrává ten, kdo je nejblíž
+      oficiálním datům. Při stejné odchylce má přednost vyšší tip.
+    </p>
+  </section>
+
+  <section class="picks" id="picks" hidden>
+
+    <article class="pick" data-category="player">
+      <h2>Tip na hráče</h2>
+      <label class="field">
+        <span>Hráč</span>
+        <select id="playerSelect"></select>
+      </label>
+      <div class="dial">
+        <output id="playerOut">0.30</output>
+        <input type="range" id="playerRange" min="0.01" max="2.50" step="0.01" value="0.30">
+        <input type="number" id="playerNum" min="0.01" max="10" step="0.01" value="0.30" aria-label="xG hráče">
+      </div>
+      <button class="save" data-category="player">Uložit tip na hráče</button>
+      <p class="msg" data-msg="player"></p>
+    </article>
+
+    <article class="pick" data-category="team">
+      <h2>Tip na tým</h2>
+      <label class="field">
+        <span>Tým</span>
+        <select id="teamSelect"></select>
+      </label>
+      <div class="dial">
+        <output id="teamOut">1.40</output>
+        <input type="range" id="teamRange" min="0.01" max="5.00" step="0.01" value="1.40">
+        <input type="number" id="teamNum" min="0.01" max="10" step="0.01" value="1.40" aria-label="xG týmu">
+      </div>
+      <button class="save" data-category="team">Uložit tip na tým</button>
+      <p class="msg" data-msg="team"></p>
+    </article>
+
+  </section>
+
+  <p class="gate" id="gate">Přihlas se Google účtem a odešli tipy pro nadcházející kolo.</p>
+
+  <section class="board">
+    <h2>Žebříček</h2>
+    <div class="tabs" role="tablist">
+      <button class="tab is-on" data-cat="player" role="tab">Hráči</button>
+      <button class="tab" data-cat="team" role="tab">Týmy</button>
+    </div>
+    <ol class="ranks" id="ranks"><li class="empty">Zatím žádné vyhodnocené kolo.</li></ol>
+  </section>
+
+  <section class="rules">
+    <h2>Jak se počítá pořadí</h2>
+    <p>
+      Rozhoduje absolutní odchylka tipu od oficiálního xG. Když jsou dva tipy
+      stejně daleko, výš skončí ten vyšší — při reálných 0.15 xG je tip 0.16
+      před tipem 0.14. Nejnižší povolená hodnota je 0.01, takže nulové alibi
+      u brankářů neprojde. Tipy se zamykají v okamžiku výkopu prvního zápasu kola.
+    </p>
+  </section>
+
+  <section class="contact">
+    <h2>Napiš autorovi</h2>
+    <form id="contactForm" action="https://formspree.io/f/xyegyyjo" method="POST">
+      <label class="field">
+        <span>Tvůj e-mail</span>
+        <input type="email" name="email" required placeholder="ty@example.com">
+      </label>
+      <label class="field">
+        <span>Zpráva</span>
+        <textarea name="message" rows="4" required placeholder="Nápad, chyba, nebo spor o xG."></textarea>
+      </label>
+      <button type="submit">Odeslat zprávu</button>
+      <p class="msg" id="contactMsg"></p>
+    </form>
+  </section>
+
+</main>
+
+<footer>
+  <a class="coffee" href="https://buymeacoffee.com/pjx88" target="_blank" rel="noopener">
+    Buy me a Coffee — podpoř provoz webu
+  </a>
+  <p>xGuesser · neoficiální fanouškovský projekt · data xG pocházejí z veřejných zdrojů Premier League</p>
+</footer>
+
+<script>window.GOOGLE_CLIENT_ID = "__GOOGLE_CLIENT_ID__";</script>
+<script src="/app.js"></script>
+</body>
+</html>
