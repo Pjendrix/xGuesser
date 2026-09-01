@@ -1,10 +1,21 @@
 import { json, currentUser, isOpen } from "../_lib.js";
 
 export async function onRequestGet({ request, env }) {
-  const gw = await env.DB.prepare(
-    `SELECT * FROM gameweeks WHERE status IN ('open','locked')
+  // Přednost má nejbližší kolo, jehož uzávěrka teprve přijde.
+  // Když žádné takové není, vezmeme poslední proběhlé, ať stránka
+  // není prázdná — ale staré nevyhodnocené kolo nesmí blokovat novější.
+  let gw = await env.DB.prepare(
+    `SELECT * FROM gameweeks
+     WHERE status IN ('open','locked') AND deadline > datetime('now')
      ORDER BY deadline ASC LIMIT 1`
   ).first();
+
+  if (!gw) {
+    gw = await env.DB.prepare(
+      `SELECT * FROM gameweeks WHERE status IN ('open','locked')
+       ORDER BY deadline DESC LIMIT 1`
+    ).first();
+  }
 
   if (!gw) return json({ gameweek: null, teams: [], players: [], featured: null, picks: {} });
 

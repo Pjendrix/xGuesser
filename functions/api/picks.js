@@ -18,7 +18,9 @@ export async function onRequestPost({ request, env }) {
   const rounded = Math.round(value * 100) / 100;
 
   const gw = await env.DB.prepare(
-    "SELECT * FROM gameweeks WHERE status IN ('open','locked') ORDER BY deadline ASC LIMIT 1"
+    `SELECT * FROM gameweeks
+     WHERE status IN ('open','locked') AND deadline > datetime('now')
+     ORDER BY deadline ASC LIMIT 1`
   ).first();
   if (!gw) return bad("No gameweek is open right now.", 409);
   if (!isOpen(gw)) return bad("Picks for this gameweek are locked.", 409);
