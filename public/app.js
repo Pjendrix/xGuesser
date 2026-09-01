@@ -165,13 +165,19 @@ function renderMine() {
     const nameEl = slot.querySelector(".slot-name");
     const xgEl = slot.querySelector(".slot-xg");
 
+    const infoEl = slot.querySelector(".info");
+
     if (!s) {
       slot.classList.remove("is-set");
       badgeEl.innerHTML = '<span class="badge is-empty">—</span>';
       nameEl.textContent = EMPTY[cat];
       xgEl.textContent = "";
+      infoEl.hidden = true;
       continue;
     }
+
+    infoEl.hidden = false;
+    infoEl.onclick = () => openHistory(cat, s.subject_id);
 
     slot.classList.add("is-set");
     badgeEl.innerHTML = badgeHtml(shortOf(cat, s));
@@ -199,6 +205,57 @@ function renderMine() {
       : `About ${h} h left to edit.`;
   }
 }
+
+
+/* ---------- xG history popup ---------- */
+function closePop() { $("#popWrap").hidden = true; }
+
+async function openHistory(cat, id) {
+  const wrap = $("#popWrap"), body = $("#popBody");
+  const apiCat = cat === "team" ? "team" : "player";
+  wrap.hidden = false;
+  body.innerHTML = '<p class="pop-msg">Loading…</p>';
+
+  let data;
+  try {
+    const r = await fetch(`/api/history?category=${apiCat}&id=${id}`);
+    data = await r.json();
+    if (!r.ok) throw new Error(data.error || "Failed");
+  } catch (e) {
+    body.innerHTML = '<p class="pop-msg">Could not load the history.</p>';
+    return;
+  }
+
+  const sub = data.subject;
+  const where = apiCat === "team" ? "" : ` · ${sub.team_name}`;
+  const head = `<div class="pop-head">${badgeHtml(sub.short)}
+    <div><strong>${sub.name}</strong><span>${apiCat === "team" ? "Team" : sub.position}${where}</span></div></div>`;
+
+  if (!data.rows.length) {
+    body.innerHTML = head + '<p class="pop-msg">No settled gameweek yet — the history fills up once results land.</p>';
+    return;
+  }
+
+  const max = Math.max(...data.rows.map((r) => r.xg), 0.5);
+  const bars = data.rows.map((r) => `
+    <div class="bar">
+      <span class="bar-gw">GW ${r.gw}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${Math.round((r.xg / max) * 100)}%"></span></span>
+      <span class="bar-val">${r.xg.toFixed(2)}</span>
+    </div>`).join("");
+
+  body.innerHTML = head + `
+    <div class="pop-stats">
+      <span><em>${data.summary.played}</em> gameweeks</span>
+      <span><em>${data.summary.avg.toFixed(2)}</em> average</span>
+      <span><em>${data.summary.best.toFixed(2)}</em> best</span>
+    </div>
+    <div class="bars">${bars}</div>`;
+}
+
+$("#popX").addEventListener("click", closePop);
+$("#popWrap").addEventListener("click", (e) => { if (e.target.id === "popWrap") closePop(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePop(); });
 
 /* ---------- Data ---------- */
 async function load() {
