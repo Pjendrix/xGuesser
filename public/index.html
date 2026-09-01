@@ -32,10 +32,28 @@
     </p>
   </section>
 
+  <section class="mine" id="mine" hidden>
+    <h2>Moje tipy pro toto kolo</h2>
+    <div class="mine-grid">
+      <div class="slot" id="slotPlayer">
+        <span class="slot-cat">Hráč</span>
+        <strong class="slot-name">zatím nic</strong>
+        <span class="slot-xg">—</span>
+      </div>
+      <div class="slot" id="slotTeam">
+        <span class="slot-cat">Tým</span>
+        <strong class="slot-name">zatím nic</strong>
+        <span class="slot-xg">—</span>
+      </div>
+    </div>
+    <p class="lock" id="lock"></p>
+  </section>
+
   <section class="picks" id="picks" hidden>
 
     <article class="pick" data-category="player">
       <h2>Tip na hráče</h2>
+      <p class="one">Jeden tip na kolo. Uložením přepíšeš předchozí.</p>
       <div class="field combo" data-combo="player">
         <span>Hráč</span>
         <input type="text" id="playerSearch" autocomplete="off" placeholder="Začni psát jméno…" role="combobox" aria-expanded="false" aria-controls="playerList">
@@ -52,6 +70,7 @@
 
     <article class="pick" data-category="team">
       <h2>Tip na tým</h2>
+      <p class="one">Jeden tip na kolo. Uložením přepíšeš předchozí.</p>
       <div class="field combo" data-combo="team">
         <span>Tým</span>
         <input type="text" id="teamSearch" autocomplete="off" placeholder="Začni psát název…" role="combobox" aria-expanded="false" aria-controls="teamList">
@@ -114,7 +133,7 @@
   <p>xGuesser · neoficiální fanouškovský projekt · data xG pocházejí z veřejných zdrojů Premier League</p>
 </footer>
 
-<script>window.GOOGLE_CLIENT_ID = "82272052763-bjr2jke27sv02bt9gst4d3jsjo8e32mn.apps.googleusercontent.com";</script>
+<script>window.GOOGLE_CLIENT_ID = "__GOOGLE_CLIENT_ID__";</script>
 <script src="/app.js"></script>
 </body>
 </html>

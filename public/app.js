@@ -1,5 +1,5 @@
 const $ = (s) => document.querySelector(s);
-let state = { user: null, gameweek: null, player: [], team: [], chosen: {} };
+let state = { user: null, gameweek: null, player: [], team: [], chosen: {}, saved: {} };
 
 /* ---------- Google Sign-In ---------- */
 window.onload = () => {
@@ -117,6 +117,42 @@ function wireDial(cat) {
   show(range.value);
 }
 
+
+/* ---------- Moje tipy ---------- */
+function renderMine() {
+  const box = $("#mine");
+  if (!state.user || !state.gameweek) { box.hidden = true; return; }
+  box.hidden = false;
+
+  for (const cat of ["player", "team"]) {
+    const slot = $(cat === "player" ? "#slotPlayer" : "#slotTeam");
+    const s = state.saved[cat];
+    const nameEl = slot.querySelector(".slot-name");
+    const xgEl = slot.querySelector(".slot-xg");
+    if (!s) {
+      slot.classList.remove("is-set");
+      nameEl.textContent = "zatím nic";
+      xgEl.textContent = "—";
+    } else {
+      const item = state[cat].find((x) => x.id === s.subject_id);
+      slot.classList.add("is-set");
+      nameEl.textContent = item ? label(cat, item) : `#${s.subject_id}`;
+      xgEl.textContent = Number(s.xg).toFixed(2) + " xG";
+    }
+  }
+
+  const lock = $("#lock");
+  const d = new Date(state.gameweek.deadline);
+  if (!state.gameweek.open) {
+    lock.textContent = "Kolo je uzamčené, tipy už měnit nejdou.";
+  } else {
+    const h = Math.max(0, Math.round((d - Date.now()) / 3600000));
+    lock.textContent = h > 48
+      ? `Změnit je můžeš do ${d.toLocaleString("cs-CZ", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}.`
+      : `Zbývá zhruba ${h} h na úpravy.`;
+  }
+}
+
 /* ---------- Data ---------- */
 async function load() {
   const me = await (await fetch("/api/auth/me")).json();
@@ -138,6 +174,8 @@ async function load() {
       : `Kolo ${data.gameweek.id} · tipy jsou uzamčené`;
   }
 
+  state.saved = data.picks || {};
+
   for (const cat of ["player", "team"]) {
     const p = data.picks[cat];
     if (!p) continue;
@@ -158,6 +196,8 @@ async function load() {
   if (!state.user) $("#gate").textContent = "Přihlas se Google účtem a odešli tipy pro nadcházející kolo.";
   else if (!data.gameweek) $("#gate").textContent = "Jakmile se otevře další kolo, objeví se tu tipovací formulář.";
   else if (!data.gameweek.open) $("#gate").textContent = "Tipy pro toto kolo jsou uzamčené. Výsledky doplníme po dohrání kola.";
+
+  renderMine();
 }
 
 document.querySelectorAll("button.save").forEach((btn) => {
@@ -184,6 +224,10 @@ document.querySelectorAll("button.save").forEach((btn) => {
     btn.disabled = false;
     msg.className = "msg " + (r.ok ? "ok" : "err");
     msg.textContent = r.ok ? `Uloženo: ${out.xg.toFixed(2)} xG` : out.error;
+    if (r.ok) {
+      state.saved[cat] = { subject_id, xg: out.xg };
+      renderMine();
+    }
   });
 });
 

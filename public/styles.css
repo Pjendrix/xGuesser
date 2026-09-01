@@ -155,3 +155,29 @@ footer p { color: var(--muted); font-size: .82rem; margin: 1rem 0 0; }
 .options li:hover, .options li.is-active { background: #16375C; }
 .options li.none { color: var(--muted); cursor: default; }
 .options li.none:hover { background: none; }
+
+/* --- moje tipy --- */
+.mine {
+  border: 1px solid var(--line); border-radius: 14px;
+  padding: 1.1rem 1.25rem; margin-bottom: 1.25rem;
+  background: linear-gradient(180deg, #0C1D31, #0A1626);
+}
+.mine h2 { margin: 0 0 .9rem; font-size: 1rem; letter-spacing: 0; }
+.mine-grid { display: grid; gap: .6rem; grid-template-columns: 1fr; }
+@media (min-width: 40rem) { .mine-grid { grid-template-columns: 1fr 1fr; } }
+.slot {
+  display: grid; grid-template-columns: 3.4rem 1fr auto; align-items: baseline;
+  gap: .6rem; padding: .55rem .7rem;
+  border: 1px dashed var(--line); border-radius: 9px;
+}
+.slot.is-set { border-style: solid; border-color: var(--beam); }
+.slot-cat { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+.slot-name { font-weight: 600; font-size: .95rem; }
+.slot.is-set .slot-name { color: var(--chalk); }
+.slot:not(.is-set) .slot-name { color: var(--muted); font-weight: 400; }
+.slot-xg {
+  font-family: Archivo, sans-serif; font-weight: 700;
+  color: var(--beam); font-variant-numeric: tabular-nums;
+}
+.lock { margin: .8rem 0 0; font-size: .84rem; color: var(--muted); }
+.one { margin: -.5rem 0 1rem; font-size: .8rem; color: var(--muted); }
