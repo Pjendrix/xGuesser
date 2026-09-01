@@ -10,7 +10,5 @@ database_id = "de099d3f-6040-4ab2-93b4-15cf619eb6b7"
 [vars]
 GOOGLE_CLIENT_ID = "82272052763-bjr2jke27sv02bt9gst4d3jsjo8e32mn.apps.googleusercontent.com"
 
-# GOOGLE_CLIENT_ID a SESSION_SECRET nastav jako secrets,
-# ne tady v souboru:
-#   npx wrangler pages secret put SESSION_SECRET
-#   npx wrangler pages secret put GOOGLE_CLIENT_ID
+# SESSION_SECRET je tajny - nastav ho jen v Cloudflare dashboardu
+# (Pages > Settings > Variables and Secrets), nikdy sem.
