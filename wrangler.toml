@@ -1,0 +1,13 @@
+name = "xguesser"
+pages_build_output_dir = "public"
+compatibility_date = "2026-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xguesser"
+database_id = "<vlož ID z wrangler d1 create>"
+
+# GOOGLE_CLIENT_ID a SESSION_SECRET nastav jako secrets,
+# ne tady v souboru:
+#   npx wrangler pages secret put SESSION_SECRET
+#   npx wrangler pages secret put GOOGLE_CLIENT_ID
